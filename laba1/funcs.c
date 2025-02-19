@@ -17,8 +17,8 @@ void inputArrayToFile(char *filename) {
     scanf_s("%d", &n);
 
     int temp;
-    for (int i = 0; i< n; i++) {
-        printf("Enter element %d: ", i+1);
+    for (int i = 0; i < n; i++) {
+        printf("Enter element %d: ", i + 1);
         scanf_s("%d", &temp);
         fwrite(&temp, sizeof(temp), 1, file);
     }
@@ -26,6 +26,9 @@ void inputArrayToFile(char *filename) {
 
     fclose(file);
 }
+
+
+
 
 void printArrayFromFile(char *filename) {
     FILE *file = fopen(filename, "rb");
@@ -63,18 +66,14 @@ void countGreaterThanSum(char *filename) {
     fclose(file);
 }
 
+int getInsertPosition(char *filename, int newValue) {
 
+    FILE *file = fopen(filename, "rb");
 
-void insertElementInFile(char *filename) {
-    FILE *file = fopen(filename, "rb+");
     if (!file) {
         perror("Error opening file");
-        return;
+        exit(1);
     }
-
-    int newValue;
-    printf("Enter number to insert: ");
-    scanf_s("%d", &newValue);
 
     int num, closestIndex = -1, closestDiff = INT_MAX, pos = 0;
     int insertPos = 0;
@@ -88,34 +87,52 @@ void insertElementInFile(char *filename) {
         }
         pos++;
     }
-
-    if (closestIndex != -1) {
-        fseek(file, 0, SEEK_END);
-        int fileSize = ftell(file);
-        int temp;
-
-        for (int i = fileSize - sizeof(int); i >= insertPos; i -= sizeof(int)) {
-            fseek(file, i, SEEK_SET);
-            fread(&temp, sizeof(int), 1, file);
-            fseek(file, i + sizeof(int), SEEK_SET);
-            fwrite(&temp, sizeof(int), 1, file);
-        }
-
-        fseek(file, insertPos, SEEK_SET);
-        fwrite(&newValue, sizeof(int), 1, file);
-    }
-
     fclose(file);
+
+    return insertPos;
 }
 
 
-void swapEvenPairsInFile(char *filename) {
-    FILE *file = fopen(filename, "r+b");
+void insertElementInFile(char *filename) {
+    FILE *file = fopen(filename, "rb+");
     if (!file) {
         perror("Error opening file");
         return;
     }
 
+    int newValue;
+    printf("Enter number to insert: ");
+    scanf_s("%d", &newValue);
+
+    int insertPos = getInsertPosition(filename, newValue);
+
+    fseek(file, 0, SEEK_END);
+    int fileSize = ftell(file);
+    int temp;
+
+    for (int i = fileSize - sizeof(int); i >= insertPos; i -= sizeof(int)) {
+        fseek(file, i, SEEK_SET);
+        fread(&temp, sizeof(int), 1, file);
+        fseek(file, i + sizeof(int), SEEK_SET);
+        fwrite(&temp, sizeof(int), 1, file);
+    }
+
+    fseek(file, insertPos, SEEK_SET);
+    fwrite(&newValue, sizeof(int), 1, file);
+
+
+    fclose(file);
+}
+
+void swapNumbersInFile(FILE *file, long pos1, int num1, long pos2, int num2) {
+    fseek(file, pos1, SEEK_SET);
+    fwrite(&num2, sizeof(int), 1, file);
+    fseek(file, pos2, SEEK_SET);
+    fwrite(&num1, sizeof(int), 1, file);
+}
+
+
+void processEvenNumbers(FILE *file) {
     int firstEven = -1, secondEven = -1;
     long firstPos = -1, secondPos = -1;
     int num;
@@ -129,25 +146,22 @@ void swapEvenPairsInFile(char *filename) {
             } else {
                 secondEven = num;
                 secondPos = pos;
-
-                // Меняем местами числа
-                fseek(file, firstPos, SEEK_SET);
-                fwrite(&secondEven, sizeof(int), 1, file);
-                fseek(file, secondPos, SEEK_SET);
-                fwrite(&firstEven, sizeof(int), 1, file);
-
-                // Сбрасываем переменные, чтобы искать следующую пару
+                swapNumbersInFile(file, firstPos, firstEven, secondPos, secondEven);
                 firstEven = -1;
                 secondEven = -1;
                 fseek(file, 0, SEEK_CUR);
             }
         }
-
-        pos = ftell(file); // Запоминаем позицию после прочтения
+        pos = ftell(file);
     }
-
-    fclose(file);
-
 }
 
-
+void swapEvenPairsInFile(char *filename) {
+    FILE *file = fopen(filename, "r+b");
+    if (!file) {
+        perror("Error opening file");
+        return;
+    }
+    processEvenNumbers(file);
+    fclose(file);
+}
