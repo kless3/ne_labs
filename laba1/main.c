@@ -27,10 +27,10 @@ int main(int argc, char *argv[]) {
                 printArrayFromFile(argv[1]);
                 break;
             case '3':
-                countGreaterThanSum(argv[1]);
+                countGreaterThanSumFinal(argv[1]);
                 break;
             case '4':
-                insertElementInFile(argv[1]);
+                task2(argv[1]);
                 break;
             case '5':
                 swapEvenPairsInFile(argv[1]);

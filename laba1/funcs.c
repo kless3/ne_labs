@@ -44,15 +44,15 @@ void printArrayFromFile(char *filename) {
     }
     printf("\n");
     fclose(file);
+
 }
 
-void countGreaterThanSum(char *filename) {
+int countGreaterThanSum(char *filename) {
     FILE *file = fopen(filename, "rb");
     if (!file) {
         perror("Error opening file");
-        return;
+        exit(1);
     }
-
     int count = 0, sum = 0, num;
 
     while (fread(&num, sizeof(int), 1, file)) {
@@ -62,18 +62,17 @@ void countGreaterThanSum(char *filename) {
         sum += num;
     }
 
-    printf("Number of elements greater than the sum of previous: %d\n", count);
     fclose(file);
+    return count;
 }
 
-int getInsertPosition(char *filename, int newValue) {
 
-    FILE *file = fopen(filename, "rb");
+void countGreaterThanSumFinal(char *filename) {
+    int count = countGreaterThanSum(filename);
+    printf("Number of elements greater than the sum of previous: %d\n", count);
+}
 
-    if (!file) {
-        perror("Error opening file");
-        exit(1);
-    }
+int getInsertPosition(FILE* file, int newValue) {
 
     int num, closestIndex = -1, closestDiff = INT_MAX, pos = 0;
     int insertPos = 0;
@@ -87,24 +86,34 @@ int getInsertPosition(char *filename, int newValue) {
         }
         pos++;
     }
-    fclose(file);
+
 
     return insertPos;
 }
 
 
-void insertElementInFile(char *filename) {
+void task2(char* filename) {
+
+    int newValue;
+    printf("Enter number to insert: ");
+    scanf_s("%d", &newValue);
+
+    insertElementInFile(filename, newValue);
+
+
+
+}
+
+void insertElementInFile(char *filename, int newValue) {
     FILE *file = fopen(filename, "rb+");
     if (!file) {
         perror("Error opening file");
         return;
     }
 
-    int newValue;
-    printf("Enter number to insert: ");
-    scanf_s("%d", &newValue);
 
-    int insertPos = getInsertPosition(filename, newValue);
+
+    int insertPos = getInsertPosition(file, newValue);
 
     fseek(file, 0, SEEK_END);
     int fileSize = ftell(file);
@@ -117,12 +126,15 @@ void insertElementInFile(char *filename) {
         fwrite(&temp, sizeof(int), 1, file);
     }
 
+
     fseek(file, insertPos, SEEK_SET);
     fwrite(&newValue, sizeof(int), 1, file);
 
 
     fclose(file);
 }
+
+
 
 void swapNumbersInFile(FILE *file, long pos1, int num1, long pos2, int num2) {
     fseek(file, pos1, SEEK_SET);
